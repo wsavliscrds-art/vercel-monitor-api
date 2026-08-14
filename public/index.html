@@ -3,52 +3,72 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Painel de Consumo · Vercel</title>
+  <title>Vercel Analytics · Premium</title>
   <style>
     :root {
-      --bg: #070708; --panel: #0e0e11; --panel-2: #131317; --border: #23232a;
-      --text: #f2f2f4; --muted: #7c7c86; --cyan: #22d3ee; --green: #2ee6a6;
-      --amber: #f5c451; --red: #f76d6d; --blue: #6aa8ff; --purple: #a988ff; --radius: 12px;
+      --bg: #060608; --panel: #0d0d10; --panel-2: #14141a; --border: #22222b;
+      --text: #f4f4f6; --muted: #7e7e8a; --faint: #55555f;
+      --cyan: #22d3ee; --blue: #6aa8ff; --purple: #a988ff;
+      --good: #2ee6a6; --bad: #f76d6d; --amber: #f5c451;
+      --grid: #1c1c24; --radius: 14px;
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--text); min-height: 100vh;
+    body { background:
+        radial-gradient(1100px 500px at 15% -8%, rgba(34,211,238,.06), transparent 60%),
+        radial-gradient(900px 500px at 100% 0%, rgba(169,136,255,.06), transparent 55%),
+        var(--bg);
+      color: var(--text); min-height: 100vh;
       font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       -webkit-font-smoothing: antialiased; }
-    .wrap { max-width: 1080px; margin: 0 auto; padding: 30px 22px 60px; }
+    .wrap { max-width: 1140px; margin: 0 auto; padding: 30px 22px 64px; }
 
-    header.top { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 22px; }
+    header.top { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
     .brand { display: flex; align-items: center; gap: 14px; }
-    .tri { font-size: 30px; line-height: 1; margin-top: 2px; }
+    .tri { font-size: 30px; line-height: 1; margin-top: 2px;
+      background: linear-gradient(135deg, var(--cyan), var(--purple)); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .brand h1 { font-size: 22px; margin: 0; font-weight: 800; letter-spacing: -0.01em; }
-    .brand h1 .hl { color: var(--cyan); }
+    .brand h1 .hl { background: linear-gradient(90deg, var(--cyan), var(--purple)); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .brand p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
     .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .auto { display: inline-flex; align-items: center; gap: 8px; background: rgba(46,230,166,.08);
-      border: 1px solid rgba(46,230,166,.35); color: var(--green); padding: 8px 13px; border-radius: 8px; font-size: 13px; font-weight: 600; }
-    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+      border: 1px solid rgba(46,230,166,.32); color: var(--good); padding: 8px 13px; border-radius: 9px; font-size: 13px; font-weight: 600; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); animation: pulse 2s infinite; }
     @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(46,230,166,.5);} 70% { box-shadow: 0 0 0 7px rgba(46,230,166,0);} 100% { box-shadow: 0 0 0 0 rgba(46,230,166,0);} }
     button.refresh { display: inline-flex; align-items: center; gap: 8px; background: var(--panel-2); color: var(--text);
-      border: 1px solid var(--border); padding: 8px 15px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: border-color .15s; }
-    button.refresh:hover { border-color: #38384a; }
+      border: 1px solid var(--border); padding: 8px 15px; border-radius: 9px; font-size: 13px; font-weight: 600; cursor: pointer; transition: border-color .15s; }
+    button.refresh:hover { border-color: #383846; }
     button.refresh:disabled { opacity: .55; cursor: default; }
     button.refresh.spin svg { animation: rot .6s linear; }
     @keyframes rot { to { transform: rotate(360deg); } }
+    .segment { display: inline-flex; background: var(--panel-2); border: 1px solid var(--border); border-radius: 9px; overflow: hidden; }
+    .segment button { background: transparent; color: var(--muted); border: none; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .segment button.active { background: linear-gradient(135deg, var(--cyan), var(--purple)); color: #05121a; }
 
-    .segment { display: inline-flex; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-    .segment button { background: transparent; color: var(--muted); border: none; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
-    .segment button.active { background: var(--cyan); color: #04141a; }
+    .grid-kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 13px; margin-bottom: 22px; }
+    .kpi { background: linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--panel);
+      border: 1px solid var(--border); border-radius: var(--radius); padding: 15px 17px 17px; }
+    .kpi .label { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .1em; line-height: 1.4; font-weight: 700; }
+    .kpi .num { display: block; margin-top: 12px; font-size: 27px; font-weight: 800; letter-spacing: .01em; font-variant-numeric: tabular-nums; }
+    .kpi .sub { color: var(--muted); font-size: 11.5px; margin-top: 6px; }
+    .c-cyan { color: var(--cyan); } .c-good { color: var(--good); } .c-bad { color: var(--bad); } .c-amber { color: var(--amber); } .c-blue { color: var(--blue); }
 
-    .grid-kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 24px; }
-    .kpi { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px 18px; }
-    .kpi .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .11em; line-height: 1.4; font-weight: 600; }
-    .kpi .num { display: inline-block; margin-top: 14px; font-size: 28px; font-weight: 800; letter-spacing: .02em;
-      border: 1.5px solid var(--border); border-radius: 10px; padding: 4px 13px; min-width: 34px; text-align: center; }
-    .kpi .sub { color: var(--muted); font-size: 12px; margin-top: 9px; }
-    .n-cyan { color: var(--cyan); border-color: rgba(34,211,238,.4); }
-    .n-green { color: var(--green); border-color: rgba(46,230,166,.4); }
-    .n-red { color: var(--red); border-color: rgba(247,109,109,.4); }
-    .n-amber { color: var(--amber); border-color: rgba(245,196,81,.4); }
+    .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 8px; }
+    @media (max-width: 780px) { .charts { grid-template-columns: 1fr; } }
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px 12px; }
+    .card h3 { margin: 0; font-size: 13.5px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .legend { display: flex; gap: 14px; font-size: 11.5px; color: var(--muted); font-weight: 600; }
+    .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 5px; vertical-align: middle; }
+    svg { display: block; width: 100%; height: auto; margin-top: 8px; overflow: visible; }
+    .ax { fill: var(--faint); font-size: 10px; font-variant-numeric: tabular-nums; }
+    .gl { stroke: var(--grid); stroke-width: 1; }
+    .dash { stroke-dasharray: 3 3; }
+
+    .strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 13px; margin: 20px 0 8px; }
+    .stat { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+    .stat .l { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .09em; font-weight: 700; }
+    .stat .v { font-size: 22px; font-weight: 800; margin-top: 7px; font-variant-numeric: tabular-nums; }
+    .stat .v small { font-size: 12px; color: var(--muted); font-weight: 600; }
 
     .sec-title { font-size: 14px; font-weight: 700; margin: 26px 0 14px; display: flex; align-items: center; gap: 9px; }
     .sec-title .muted { color: var(--muted); font-weight: 400; font-size: 12px; }
@@ -56,54 +76,52 @@
     .banner { background: rgba(247,109,109,.07); border: 1px solid rgba(247,109,109,.32); color: #f4b9b9;
       padding: 15px 18px; border-radius: var(--radius); margin-bottom: 22px; font-size: 13.5px; line-height: 1.6; display: none; }
     .banner.show { display: block; }
-    .banner .bt { color: var(--red); font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .banner .bt { color: var(--bad); font-weight: 700; }
     .banner code { background: rgba(255,255,255,.09); padding: 2px 6px; border-radius: 5px; }
-    .banner a { color: var(--blue); }
-    .banner ol { margin: 10px 0 0; padding-left: 20px; }
+    .banner a { color: var(--blue); } .banner ol { margin: 10px 0 0; padding-left: 20px; }
 
-    /* Consumo por projeto (barras) */
-    .bars { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 4px; }
-    .bar-row { display: grid; grid-template-columns: 190px 1fr 120px; align-items: center; gap: 14px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+    .bars { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 4px; }
+    .bar-row { display: grid; grid-template-columns: 180px 1fr 118px; align-items: center; gap: 14px; padding: 11px 16px; border-bottom: 1px solid var(--border); }
     .bar-row:last-child { border-bottom: none; }
-    .bar-name { font-weight: 700; font-size: 13.5px; display: flex; align-items: center; gap: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .bar-track { background: var(--panel-2); border-radius: 6px; height: 12px; overflow: hidden; }
+    .bar-name { font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 7px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bar-track { background: var(--panel-2); border-radius: 6px; height: 11px; overflow: hidden; }
     .bar-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--cyan), var(--purple)); }
-    .bar-fill.att { background: linear-gradient(90deg, var(--amber), var(--red)); }
-    .bar-val { text-align: right; font-size: 13px; }
-    .bar-val b { font-size: 15px; }
-    .bar-val span { color: var(--muted); font-size: 11px; display: block; }
-    .tag { font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px; text-transform: uppercase; letter-spacing: .04em; }
+    .bar-fill.att { background: linear-gradient(90deg, var(--amber), var(--bad)); }
+    .bar-val { text-align: right; font-size: 13px; font-variant-numeric: tabular-nums; }
+    .bar-val b { font-size: 14px; } .bar-val span { color: var(--muted); font-size: 11px; display: block; }
+    .tag { font-size: 9.5px; font-weight: 800; padding: 2px 7px; border-radius: 999px; text-transform: uppercase; letter-spacing: .04em; }
     .tag-top { background: rgba(34,211,238,.15); color: var(--cyan); }
     .tag-att { background: rgba(245,196,81,.15); color: var(--amber); }
 
-    /* Atenção */
-    .att-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
-    .att-card { background: var(--panel); border: 1px solid rgba(247,109,109,.3); border-radius: var(--radius); padding: 15px 17px; }
-    .att-card .n { font-weight: 700; font-size: 14px; margin-bottom: 8px; }
+    .att-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(275px, 1fr)); gap: 13px; }
+    .att-card { background: var(--panel); border: 1px solid rgba(247,109,109,.3); border-radius: var(--radius); padding: 14px 16px; }
+    .att-card .n { font-weight: 700; font-size: 13.5px; margin-bottom: 7px; }
     .att-card ul { margin: 0; padding-left: 18px; color: #f4c9a0; font-size: 12.5px; line-height: 1.7; }
-    .ok-box { background: rgba(46,230,166,.06); border: 1px solid rgba(46,230,166,.28); color: #b9f4de;
-      padding: 14px 18px; border-radius: var(--radius); font-size: 13.5px; }
+    .ok-box { background: rgba(46,230,166,.06); border: 1px solid rgba(46,230,166,.26); color: #b9f4de; padding: 14px 18px; border-radius: var(--radius); font-size: 13.5px; }
 
-    /* Tabela deploys */
     .table-wrap { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    thead th { color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .1em;
-      text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); }
-    tbody td { padding: 13px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; vertical-align: top; }
+    thead th { color: var(--muted); font-weight: 600; font-size: 10.5px; text-transform: uppercase; letter-spacing: .09em; text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--border); }
+    tbody td { padding: 12px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; vertical-align: top; }
     tbody tr:hover { background: rgba(255,255,255,.015); }
-    .proj a { color: var(--text); text-decoration: none; font-weight: 700; }
-    .proj a:hover { color: var(--cyan); }
+    .proj a { color: var(--text); text-decoration: none; font-weight: 700; } .proj a:hover { color: var(--cyan); }
     .commit { color: var(--muted); font-size: 12px; margin-top: 3px; max-width: 300px; overflow: hidden; text-overflow: ellipsis; }
-    .state-pill { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .04em; margin-left: 8px; }
-    .s-ready { background: rgba(46,230,166,.14); color: var(--green); }
-    .s-error { background: rgba(247,109,109,.14); color: var(--red); }
+    .state-pill { font-size: 9.5px; font-weight: 800; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .04em; margin-left: 8px; }
+    .s-ready { background: rgba(46,230,166,.14); color: var(--good); }
+    .s-error { background: rgba(247,109,109,.14); color: var(--bad); }
     .s-building { background: rgba(245,196,81,.14); color: var(--amber); }
     .s-other { background: rgba(124,124,134,.16); color: var(--muted); }
     .branch { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--blue); }
-    td a.open { color: var(--blue); text-decoration: none; }
-    td a.open:hover { text-decoration: underline; }
+    td a.open { color: var(--blue); text-decoration: none; } td a.open:hover { text-decoration: underline; }
     .empty, .skeleton { color: var(--muted); font-size: 13px; padding: 22px 14px; text-align: center; }
     footer { margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; line-height: 1.7; }
+    footer code { color: var(--muted); }
+
+    #tip { position: fixed; z-index: 50; pointer-events: none; background: #16161c; border: 1px solid #33333f;
+      border-radius: 8px; padding: 8px 11px; font-size: 12px; line-height: 1.5; color: var(--text);
+      box-shadow: 0 8px 24px rgba(0,0,0,.5); opacity: 0; transition: opacity .1s; white-space: nowrap; }
+    #tip.show { opacity: 1; }
+    #tip b { font-weight: 700; } #tip .mut { color: var(--muted); }
   </style>
 </head>
 <body>
@@ -112,8 +130,8 @@
       <div class="brand">
         <div class="tri">▲</div>
         <div>
-          <h1>Painel de <span class="hl">Consumo</span></h1>
-          <p>Consumo e saúde dos seus projetos · via API da Vercel</p>
+          <h1>Vercel <span class="hl">Analytics</span></h1>
+          <p>Consumo, saúde e tendências dos seus projetos · dados reais da API</p>
         </div>
       </div>
       <div class="controls">
@@ -124,7 +142,7 @@
         </div>
         <span class="auto"><span class="dot"></span> auto <b id="countdown">30</b>s</span>
         <button class="refresh" id="refreshBtn" onclick="loadAll(true)">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;margin:0"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           atualizar
         </button>
       </div>
@@ -133,16 +151,39 @@
     <div class="banner" id="banner"></div>
 
     <div class="grid-kpi">
-      <div class="kpi"><div class="label">Min. de build<br>consumidos</div><div class="num n-cyan" id="k-build">0</div><div class="sub" id="k-build-sub">no período</div></div>
-      <div class="kpi"><div class="label">Deploys<br>no período</div><div class="num" id="k-deploys">0</div></div>
-      <div class="kpi"><div class="label">Projetos<br>ativos</div><div class="num" id="k-projects">0</div></div>
-      <div class="kpi"><div class="label">Deploys<br>com erro</div><div class="num n-red" id="k-errors">0</div></div>
-      <div class="kpi"><div class="label">Taxa de<br>sucesso</div><div class="num n-green" id="k-rate">0%</div></div>
-      <div class="kpi"><div class="label">Precisam de<br>atenção</div><div class="num n-amber" id="k-att">0</div></div>
+      <div class="kpi"><div class="label">Min. de build<br>consumidos</div><span class="num c-cyan" id="k-build">0</span><span class="sub" id="k-build-sub">no período</span></div>
+      <div class="kpi"><div class="label">Deploys<br>no período</div><span class="num" id="k-deploys">0</span><span class="sub" id="k-freq">0/dia</span></div>
+      <div class="kpi"><div class="label">Taxa de<br>sucesso</div><span class="num c-good" id="k-rate">0%</span></div>
+      <div class="kpi"><div class="label">Change<br>failure rate</div><span class="num c-bad" id="k-cfr">0%</span><span class="sub">DORA · falhas</span></div>
+      <div class="kpi"><div class="label">Projetos<br>ativos</div><span class="num" id="k-projects">0</span></div>
+      <div class="kpi"><div class="label">Precisam de<br>atenção</div><span class="num c-amber" id="k-att">0</span></div>
     </div>
 
-    <div class="sec-title">🔥 Consumo por projeto <span class="muted" id="c-note">(minutos de build)</span></div>
-    <div class="bars" id="bars"><div class="skeleton">calculando consumo…</div></div>
+    <div class="charts">
+      <div class="card">
+        <h3>Deploys por dia
+          <span class="legend"><span><i style="background:var(--good)"></i>prontos</span><span><i style="background:var(--bad)"></i>erro</span></span>
+        </h3>
+        <div id="chart-deploys"><div class="skeleton">carregando…</div></div>
+      </div>
+      <div class="card">
+        <h3>Tempo de build por dia
+          <span class="legend"><span><i style="background:var(--blue)"></i>média/dia</span><span><i style="background:var(--amber)"></i>p95</span></span>
+        </h3>
+        <div id="chart-build"><div class="skeleton">carregando…</div></div>
+      </div>
+    </div>
+
+    <div class="strip" id="strip">
+      <div class="stat"><div class="l">Build p50 (mediana)</div><div class="v" id="s-p50">—</div></div>
+      <div class="stat"><div class="l">Build p95</div><div class="v" id="s-p95">—</div></div>
+      <div class="stat"><div class="l">Build p99</div><div class="v" id="s-p99">—</div></div>
+      <div class="stat"><div class="l">Build mais lento</div><div class="v" id="s-max">—</div></div>
+      <div class="stat"><div class="l">Frequência de deploy</div><div class="v" id="s-freq">—</div></div>
+    </div>
+
+    <div class="sec-title">🔥 Consumo por projeto <span class="muted">(minutos de build)</span></div>
+    <div class="bars" id="bars"><div class="skeleton">calculando…</div></div>
 
     <div class="sec-title">⚠️ Precisa de atenção <span class="muted" id="att-count"></span></div>
     <div id="attention"><div class="skeleton">analisando…</div></div>
@@ -156,10 +197,12 @@
     </div>
 
     <footer>
-      Fonte: <code style="color:var(--muted)">/api/usage</code> e <code style="color:var(--muted)">/api/deployments</code> · atualizado <span id="updated">—</span><br>
-      ℹ️ A API pessoal da Vercel não expõe banda/edge-requests por projeto — o consumo aqui é medido por <b>minutos de build</b> e atividade de deploy, que são os dados reais disponíveis.
+      Fonte: <code>/api/usage</code> e <code>/api/deployments</code> · atualizado <span id="updated">—</span><br>
+      ℹ️ Banda/edge-requests não são expostos pela API pessoal da Vercel — as tendências aqui são medidas por <b>minutos de build</b>, frequência e taxa de erro, que são os dados reais disponíveis. Métricas DORA e percentis calculados sobre o histórico do período.
     </footer>
   </div>
+
+  <div id="tip"></div>
 
   <script>
     const REFRESH_SECONDS = 30;
@@ -167,6 +210,7 @@
     let days = 30;
 
     const $ = (id) => document.getElementById(id);
+    const NS = 'http://www.w3.org/2000/svg';
     function esc(v){ return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
     function timeAgo(ts){ if(!ts) return '—'; const m=Math.floor((Date.now()-ts)/60000);
       if(m<1) return 'agora'; if(m<60) return m+' min'; const h=Math.floor(m/60); if(h<24) return h+'h'; return Math.floor(h/24)+'d'; }
@@ -174,7 +218,83 @@
     function fmtMin(min){ if(min>=60){ const h=Math.floor(min/60), m=Math.round(min%60); return h+'h'+(m?' '+m+'m':''); } return (Math.round(min*10)/10)+' min'; }
     function stateClass(s){ s=(s||'').toUpperCase(); if(s==='READY')return 's-ready'; if(s==='ERROR')return 's-error';
       if(['BUILDING','QUEUED','INITIALIZING'].includes(s))return 's-building'; return 's-other'; }
-    function isBuilding(s){ return ['BUILDING','QUEUED','INITIALIZING'].includes((s||'').toUpperCase()); }
+
+    // ---- Tooltip ----
+    const tip = $('tip');
+    function showTip(html, el){ tip.innerHTML = html; tip.classList.add('show');
+      const r = el.getBoundingClientRect(); const t = tip.getBoundingClientRect();
+      let x = r.left + r.width/2 - t.width/2; let y = r.top - t.height - 8;
+      x = Math.max(8, Math.min(x, window.innerWidth - t.width - 8));
+      if (y < 8) y = r.bottom + 8;
+      tip.style.left = x+'px'; tip.style.top = y+'px'; }
+    function hideTip(){ tip.classList.remove('show'); }
+
+    function el(tag, attrs){ const e = document.createElementNS(NS, tag); for(const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+
+    // ---- Gráfico de barras empilhadas: deploys por dia ----
+    function renderDeploys(container, daily){
+      container.innerHTML = '';
+      if(!daily.length){ container.innerHTML='<div class="empty">sem dados</div>'; return; }
+      const W=520, H=200, mL=30, mR=8, mT=10, mB=22;
+      const pw=W-mL-mR, ph=H-mT-mB;
+      const max = Math.max(1, ...daily.map(d=>d.total));
+      const n = daily.length;
+      const gap = n>45?0.5:1.5;
+      const bw = pw/n - gap;
+      const svg = el('svg',{viewBox:`0 0 ${W} ${H}`});
+      // gridlines + y labels
+      for(let i=0;i<=4;i++){ const val=Math.round(max*i/4); const y=mT+ph-(ph*i/4);
+        svg.appendChild(el('line',{class:'gl',x1:mL,y1:y,x2:W-mR,y2:y}));
+        const tx=el('text',{class:'ax',x:mL-6,y:y+3,'text-anchor':'end'}); tx.textContent=val; svg.appendChild(tx); }
+      const step = Math.ceil(n/8);
+      daily.forEach((d,i)=>{
+        const x = mL + i*(pw/n) + gap/2;
+        const hR = (d.ready/max)*ph, hE=(d.error/max)*ph;
+        const yE = mT+ph-hE, yR = yE-hR;
+        if(d.error>0) svg.appendChild(el('rect',{x, y:yE, width:bw, height:hE, rx:1.5, fill:'var(--bad)'}));
+        if(d.ready>0) svg.appendChild(el('rect',{x, y:yR, width:bw, height:hR, rx:1.5, fill:'var(--good)'}));
+        // hit target
+        const hit = el('rect',{x, y:mT, width:bw, height:ph, fill:'transparent'});
+        hit.addEventListener('mouseenter',()=>showTip(`<b>${esc(d.label)}</b><br><span style="color:var(--good)">${d.ready} prontos</span> · <span style="color:var(--bad)">${d.error} erro</span><br><span class="mut">${d.total} deploys</span>`, hit));
+        hit.addEventListener('mouseleave', hideTip);
+        svg.appendChild(hit);
+        if(i%step===0){ const tx=el('text',{class:'ax',x:x+bw/2,y:H-6,'text-anchor':'middle'}); tx.textContent=d.label; svg.appendChild(tx); }
+      });
+      container.appendChild(svg);
+    }
+
+    // ---- Gráfico de linha: tempo de build por dia (+ p95) ----
+    function renderBuild(container, daily, build){
+      container.innerHTML='';
+      const pts = daily.filter(d=>d.avgBuildSeconds>0);
+      if(pts.length<1){ container.innerHTML='<div class="empty">sem builds medidos no período</div>'; return; }
+      const W=520,H=200,mL=34,mR=10,mT=10,mB=22;
+      const pw=W-mL-mR, ph=H-mT-mB;
+      const n=daily.length;
+      const max = Math.max(build.p95||0, ...daily.map(d=>d.avgBuildSeconds), 10)*1.12;
+      const X=(i)=> mL + (n<=1?pw/2:(i*(pw/(n-1))));
+      const Y=(v)=> mT+ph-(v/max)*ph;
+      const svg=el('svg',{viewBox:`0 0 ${W} ${H}`});
+      for(let i=0;i<=4;i++){ const val=Math.round(max*i/4); const y=mT+ph-(ph*i/4);
+        svg.appendChild(el('line',{class:'gl',x1:mL,y1:y,x2:W-mR,y2:y}));
+        const tx=el('text',{class:'ax',x:mL-6,y:y+3,'text-anchor':'end'}); tx.textContent=val+'s'; svg.appendChild(tx); }
+      // p95 reference
+      if(build.p95>0){ const yp=Y(build.p95); svg.appendChild(el('line',{class:'gl dash',x1:mL,y1:yp,x2:W-mR,y2:yp,stroke:'var(--amber)'}));
+        const tx=el('text',{class:'ax',x:W-mR,y:yp-4,'text-anchor':'end',fill:'var(--amber)'}); tx.textContent='p95 '+build.p95+'s'; svg.appendChild(tx); }
+      // line path across days that have data (connect by index)
+      let dpath='';
+      daily.forEach((d,i)=>{ if(d.avgBuildSeconds>0){ dpath += (dpath?'L':'M')+X(i)+' '+Y(d.avgBuildSeconds)+' '; } });
+      svg.appendChild(el('path',{d:dpath, fill:'none', stroke:'var(--blue)', 'stroke-width':2, 'stroke-linejoin':'round', 'stroke-linecap':'round'}));
+      const step=Math.ceil(n/8);
+      daily.forEach((d,i)=>{
+        if(d.avgBuildSeconds>0){ const cx=X(i),cy=Y(d.avgBuildSeconds);
+          const c=el('circle',{cx,cy,r:3.2,fill:'var(--blue)',stroke:'var(--panel)','stroke-width':1.5});
+          c.addEventListener('mouseenter',()=>showTip(`<b>${esc(d.label)}</b><br>build médio <b>${d.avgBuildSeconds}s</b><br><span class="mut">${d.total} deploys</span>`, c));
+          c.addEventListener('mouseleave', hideTip); svg.appendChild(c); }
+        if(i%step===0){ const tx=el('text',{class:'ax',x:X(i),y:H-6,'text-anchor':'middle'}); tx.textContent=d.label; svg.appendChild(tx); }
+      });
+      container.appendChild(svg);
+    }
 
     function showBanner(msg, token){ const b=$('banner'); b.classList.add('show');
       b.innerHTML = `<div class="bt">⚠️ Não foi possível carregar</div><div style="margin-top:6px">${esc(msg)}</div>` +
@@ -182,7 +302,6 @@
         <li><b>Settings → Environment Variables</b> → adicione <code>VERCEL_TOKEN</code></li>
         <li>Marque Production/Preview e faça <b>Redeploy</b></li></ol>` : ''); }
     function hideBanner(){ $('banner').classList.remove('show'); }
-
     async function getJSON(url){ const r=await fetch(url,{cache:'no-store'}); const d=await r.json().catch(()=>({}));
       if(!r.ok){ const e=new Error(d.error||('HTTP '+r.status)); e.code=d.code; throw e; } return d; }
 
@@ -191,75 +310,61 @@
       $('k-build').textContent = u.totals.buildMinutes;
       $('k-build-sub').textContent = fmtMin(u.totals.buildMinutes) + ' · ' + days + 'd';
       $('k-deploys').textContent = u.totals.deploys;
-      $('k-projects').textContent = u.totals.projects;
-      $('k-errors').textContent = u.totals.errors;
+      $('k-freq').textContent = u.dora.deploysPerDay + '/dia';
       $('k-rate').textContent = u.totals.successRate + '%';
+      $('k-cfr').textContent = u.dora.changeFailureRate + '%';
+      $('k-projects').textContent = u.totals.projects;
       $('k-att').textContent = u.totals.attention;
 
+      renderDeploys($('chart-deploys'), u.daily);
+      renderBuild($('chart-build'), u.daily, u.build);
+
+      $('s-p50').innerHTML = u.build.p50 + '<small>s</small>';
+      $('s-p95').innerHTML = u.build.p95 + '<small>s</small>';
+      $('s-p99').innerHTML = u.build.p99 + '<small>s</small>';
+      $('s-max').innerHTML = u.build.slowest + '<small>s</small>';
+      $('s-freq').innerHTML = u.dora.deploysPerDay + '<small>/dia</small>';
+
       const bars = $('bars');
-      if(!u.projects.length){ bars.innerHTML = '<div class="empty">nenhum deploy no período</div>'; }
-      else {
-        bars.innerHTML = u.projects.slice(0,12).map(p=>{
-          const tags = (p.topConsumer?'<span class="tag tag-top">maior consumo</span>':'') + (p.attention?'<span class="tag tag-att">atenção</span>':'');
-          return `<div class="bar-row">
-            <div class="bar-name" title="${esc(p.name)}">${esc(p.name)} ${tags}</div>
-            <div class="bar-track"><div class="bar-fill ${p.attention?'att':''}" style="width:${Math.max(p.buildShare,3)}%"></div></div>
-            <div class="bar-val"><b>${fmtMin(p.buildMinutes)}</b><span>${p.deploys} deploys · ${p.errorRate}% erro</span></div>
-          </div>`; }).join('');
-      }
+      bars.innerHTML = u.projects.length ? u.projects.slice(0,12).map(p=>{
+        const tags = (p.topConsumer?'<span class="tag tag-top">maior consumo</span>':'') + (p.attention?'<span class="tag tag-att">atenção</span>':'');
+        return `<div class="bar-row">
+          <div class="bar-name" title="${esc(p.name)}">${esc(p.name)} ${tags}</div>
+          <div class="bar-track"><div class="bar-fill ${p.attention?'att':''}" style="width:${Math.max(p.buildShare,3)}%"></div></div>
+          <div class="bar-val"><b>${fmtMin(p.buildMinutes)}</b><span>${p.deploys} deploys · ${p.errorRate}% erro</span></div>
+        </div>`; }).join('') : '<div class="empty">nenhum deploy no período</div>';
 
       const att = u.projects.filter(p=>p.attention);
       $('att-count').textContent = att.length ? '('+att.length+')' : '';
       $('attention').innerHTML = att.length
-        ? '<div class="att-grid">' + att.map(p=>`<div class="att-card">
-            <div class="n">${esc(p.name)}</div>
+        ? '<div class="att-grid">' + att.map(p=>`<div class="att-card"><div class="n">${esc(p.name)}</div>
             <ul>${p.reasons.map(r=>'<li>'+esc(r)+'</li>').join('')}
-            <li style="color:var(--muted)">${p.deploys} deploys · ${fmtMin(p.buildMinutes)} de build · último ${timeAgo(p.lastDeploy)}</li></ul>
-          </div>`).join('') + '</div>'
+            <li style="color:var(--muted)">${p.deploys} deploys · ${fmtMin(p.buildMinutes)} de build · último ${timeAgo(p.lastDeploy)}</li></ul></div>`).join('') + '</div>'
         : '<div class="ok-box">✅ Tudo saudável — nenhum projeto com taxa de erro alta ou build muito lento no período.</div>';
     }
 
     async function loadDeployments(){
       const d = await getJSON('/api/deployments?limit=25');
-      const tb = $('rows');
-      tb.innerHTML = (d.deployments||[]).length ? d.deployments.map(x=>`
-        <tr>
-          <td><div class="proj">${x.url?`<a href="https://${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>`:esc(x.name)}<span class="state-pill ${stateClass(x.state)}">${esc(x.state)}</span></div>
-            <div class="commit" title="${esc(x.commitMessage||'')}">${esc(x.commitMessage||'—')}</div></td>
+      $('rows').innerHTML = (d.deployments||[]).length ? d.deployments.map(x=>`
+        <tr><td><div class="proj">${x.url?`<a href="https://${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>`:esc(x.name)}<span class="state-pill ${stateClass(x.state)}">${esc(x.state)}</span></div>
+          <div class="commit" title="${esc(x.commitMessage||'')}">${esc(x.commitMessage||'—')}</div></td>
           <td><span class="branch">${esc(x.branch||'—')}</span></td>
-          <td>${esc(x.creator||'—')}</td>
-          <td>${fmtDur(x.buildSeconds)}</td>
-          <td>${timeAgo(x.created)}</td>
-          <td>${x.url?`<a class="open" href="https://${esc(x.url)}" target="_blank" rel="noopener">abrir ↗</a>`:''}</td>
-        </tr>`).join('') : '<tr><td colspan="6" class="empty">nenhum deployment encontrado</td></tr>';
+          <td>${esc(x.creator||'—')}</td><td>${fmtDur(x.buildSeconds)}</td><td>${timeAgo(x.created)}</td>
+          <td>${x.url?`<a class="open" href="https://${esc(x.url)}" target="_blank" rel="noopener">abrir ↗</a>`:''}</td></tr>`).join('')
+        : '<tr><td colspan="6" class="empty">nenhum deployment encontrado</td></tr>';
     }
 
     async function loadAll(manual){
       const btn=$('refreshBtn'); if(manual){ btn.disabled=true; btn.classList.add('spin'); }
-      try {
-        await Promise.all([loadUsage(), loadDeployments()]);
-        hideBanner();
-        $('updated').textContent = new Date().toLocaleTimeString('pt-BR');
-      } catch(e){
-        showBanner(e.code==='NO_TOKEN'? e.message : ('Failed to fetch — confira se /api/usage está no ar e se o token (VERCEL_TOKEN) foi configurado lá.'), e.code==='NO_TOKEN');
-      } finally {
-        if(manual){ btn.disabled=false; setTimeout(()=>btn.classList.remove('spin'),600); }
-        countdown = REFRESH_SECONDS;
-      }
+      try { await Promise.all([loadUsage(), loadDeployments()]); hideBanner(); $('updated').textContent = new Date().toLocaleTimeString('pt-BR'); }
+      catch(e){ showBanner(e.code==='NO_TOKEN'? e.message : 'Failed to fetch — confira se /api/usage está no ar e se o token (VERCEL_TOKEN) foi configurado lá.', e.code==='NO_TOKEN'); }
+      finally { if(manual){ btn.disabled=false; setTimeout(()=>btn.classList.remove('spin'),600); } countdown=REFRESH_SECONDS; }
     }
 
-    $('period').addEventListener('click', (e)=>{
-      const b = e.target.closest('button'); if(!b) return;
-      days = parseInt(b.dataset.d,10);
-      [...$('period').children].forEach(x=>x.classList.toggle('active', x===b));
-      loadAll(true);
-    });
-
-    function tick(){ countdown--; $('countdown').textContent=Math.max(countdown,0);
-      if(countdown<=0){ countdown=REFRESH_SECONDS; loadAll(false); } }
-
-    loadAll(false);
-    setInterval(tick, 1000);
+    $('period').addEventListener('click',(e)=>{ const b=e.target.closest('button'); if(!b) return;
+      days=parseInt(b.dataset.d,10); [...$('period').children].forEach(x=>x.classList.toggle('active',x===b)); loadAll(true); });
+    function tick(){ countdown--; $('countdown').textContent=Math.max(countdown,0); if(countdown<=0){ countdown=REFRESH_SECONDS; loadAll(false); } }
+    loadAll(false); setInterval(tick,1000);
   </script>
 </body>
 </html>

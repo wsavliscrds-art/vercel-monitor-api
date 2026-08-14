@@ -60,6 +60,56 @@ module.exports = async (req, res) => {
     const totalErrors = projects.reduce((s, p) => s + p.errors, 0);
     const finished = totalReady + totalErrors;
 
+    // ---- Análise temporal (série diária) + percentis de build + DORA ----
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    const startDay = new Date(since);
+    startDay.setUTCHours(0, 0, 0, 0);
+    const dayKey = (t) => new Date(t).toISOString().slice(0, 10);
+    const bucket = {};
+    const buildSamples = [];
+    for (const d of deps) {
+      const st = (d.readyState || d.state || '').toUpperCase();
+      const t = d.created || d.createdAt || 0;
+      const buildS = d.ready && d.buildingAt && d.ready > d.buildingAt
+        ? (d.ready - d.buildingAt) / 1000 : null;
+      const k = dayKey(t);
+      const b = bucket[k] || (bucket[k] = { total: 0, ready: 0, error: 0, buildMs: 0, buildN: 0 });
+      b.total++;
+      if (st === 'READY') b.ready++;
+      if (st === 'ERROR') b.error++;
+      if (buildS != null) { b.buildMs += buildS; b.buildN++; buildSamples.push(buildS); }
+    }
+    const daily = [];
+    for (let ts = startDay.getTime(); ts <= Date.now(); ts += DAY_MS) {
+      const k = dayKey(ts);
+      const b = bucket[k] || { total: 0, ready: 0, error: 0, buildMs: 0, buildN: 0 };
+      const dt = new Date(ts);
+      daily.push({
+        date: k,
+        label: `${String(dt.getUTCDate()).padStart(2, '0')}/${String(dt.getUTCMonth() + 1).padStart(2, '0')}`,
+        total: b.total,
+        ready: b.ready,
+        error: b.error,
+        avgBuildSeconds: b.buildN ? Math.round(b.buildMs / b.buildN) : 0,
+      });
+    }
+
+    buildSamples.sort((a, b) => a - b);
+    const pct = (p) => (buildSamples.length
+      ? Math.round(buildSamples[Math.min(buildSamples.length - 1, Math.floor((p / 100) * buildSamples.length))])
+      : 0);
+    const build = {
+      p50: pct(50),
+      p95: pct(95),
+      p99: pct(99),
+      avg: buildSamples.length ? Math.round(buildSamples.reduce((s, v) => s + v, 0) / buildSamples.length) : 0,
+      slowest: buildSamples.length ? Math.round(buildSamples[buildSamples.length - 1]) : 0,
+    };
+    const dora = {
+      deploysPerDay: Math.round((deps.length / days) * 10) / 10,
+      changeFailureRate: finished ? Math.round((totalErrors / finished) * 100) : 0,
+    };
+
     res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
     res.status(200).json({
       days,
@@ -72,6 +122,9 @@ module.exports = async (req, res) => {
         successRate: finished ? Math.round((totalReady / finished) * 100) : 0,
         attention: projects.filter((p) => p.attention).length,
       },
+      daily,
+      build,
+      dora,
       projects,
     });
   } catch (e) {
