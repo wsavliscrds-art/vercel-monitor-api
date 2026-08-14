@@ -3,106 +3,107 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Painel de Deploys · Vercel</title>
+  <title>Painel de Consumo · Vercel</title>
   <style>
     :root {
-      --bg: #070708;
-      --panel: #0e0e11;
-      --panel-2: #131317;
-      --border: #23232a;
-      --text: #f2f2f4;
-      --muted: #7c7c86;
-      --cyan: #22d3ee;
-      --green: #2ee6a6;
-      --amber: #f5c451;
-      --red: #f76d6d;
-      --blue: #6aa8ff;
-      --radius: 12px;
+      --bg: #070708; --panel: #0e0e11; --panel-2: #131317; --border: #23232a;
+      --text: #f2f2f4; --muted: #7c7c86; --cyan: #22d3ee; --green: #2ee6a6;
+      --amber: #f5c451; --red: #f76d6d; --blue: #6aa8ff; --purple: #a988ff; --radius: 12px;
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
-    body {
-      background: var(--bg);
-      color: var(--text);
+    body { background: var(--bg); color: var(--text); min-height: 100vh;
       font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      -webkit-font-smoothing: antialiased;
-      min-height: 100vh;
-    }
+      -webkit-font-smoothing: antialiased; }
     .wrap { max-width: 1080px; margin: 0 auto; padding: 30px 22px 60px; }
 
-    header.top { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 26px; }
+    header.top { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 22px; }
     .brand { display: flex; align-items: center; gap: 14px; }
     .tri { font-size: 30px; line-height: 1; margin-top: 2px; }
     .brand h1 { font-size: 22px; margin: 0; font-weight: 800; letter-spacing: -0.01em; }
     .brand h1 .hl { color: var(--cyan); }
     .brand p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
-
-    .controls { display: flex; align-items: center; gap: 10px; }
-    .auto {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: rgba(46,230,166,.08); border: 1px solid rgba(46,230,166,.35);
-      color: var(--green); padding: 8px 13px; border-radius: 8px; font-size: 13px; font-weight: 600;
-    }
+    .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .auto { display: inline-flex; align-items: center; gap: 8px; background: rgba(46,230,166,.08);
+      border: 1px solid rgba(46,230,166,.35); color: var(--green); padding: 8px 13px; border-radius: 8px; font-size: 13px; font-weight: 600; }
     .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
     @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(46,230,166,.5);} 70% { box-shadow: 0 0 0 7px rgba(46,230,166,0);} 100% { box-shadow: 0 0 0 0 rgba(46,230,166,0);} }
-    button.refresh {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
-      padding: 8px 15px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
-      transition: border-color .15s, background .15s;
-    }
+    button.refresh { display: inline-flex; align-items: center; gap: 8px; background: var(--panel-2); color: var(--text);
+      border: 1px solid var(--border); padding: 8px 15px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: border-color .15s; }
     button.refresh:hover { border-color: #38384a; }
     button.refresh:disabled { opacity: .55; cursor: default; }
-    button.refresh svg { transition: transform .5s; }
-    button.refresh.spin svg { transform: rotate(360deg); }
+    button.refresh.spin svg { animation: rot .6s linear; }
+    @keyframes rot { to { transform: rotate(360deg); } }
 
-    .grid-kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 22px; }
-    .kpi { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px 20px; }
-    .kpi .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .12em; line-height: 1.4; font-weight: 600; }
-    .kpi .num {
-      display: inline-block; margin-top: 16px; font-size: 30px; font-weight: 800; letter-spacing: 0.02em;
-      border: 1.5px solid var(--border); border-radius: 10px; padding: 4px 14px; min-width: 34px; text-align: center;
-    }
-    .kpi.pct .num { font-size: 30px; }
-    .kpi .sub { color: var(--muted); font-size: 12px; margin-top: 10px; }
+    .segment { display: inline-flex; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .segment button { background: transparent; color: var(--muted); border: none; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .segment button.active { background: var(--cyan); color: #04141a; }
+
+    .grid-kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .kpi { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px 18px; }
+    .kpi .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .11em; line-height: 1.4; font-weight: 600; }
+    .kpi .num { display: inline-block; margin-top: 14px; font-size: 28px; font-weight: 800; letter-spacing: .02em;
+      border: 1.5px solid var(--border); border-radius: 10px; padding: 4px 13px; min-width: 34px; text-align: center; }
+    .kpi .sub { color: var(--muted); font-size: 12px; margin-top: 9px; }
+    .n-cyan { color: var(--cyan); border-color: rgba(34,211,238,.4); }
     .n-green { color: var(--green); border-color: rgba(46,230,166,.4); }
     .n-red { color: var(--red); border-color: rgba(247,109,109,.4); }
     .n-amber { color: var(--amber); border-color: rgba(245,196,81,.4); }
 
-    .banner {
-      background: rgba(247,109,109,.07); border: 1px solid rgba(247,109,109,.32);
-      color: #f4b9b9; padding: 15px 18px; border-radius: var(--radius); margin-bottom: 22px;
-      font-size: 13.5px; line-height: 1.6; display: none;
-    }
+    .sec-title { font-size: 14px; font-weight: 700; margin: 26px 0 14px; display: flex; align-items: center; gap: 9px; }
+    .sec-title .muted { color: var(--muted); font-weight: 400; font-size: 12px; }
+
+    .banner { background: rgba(247,109,109,.07); border: 1px solid rgba(247,109,109,.32); color: #f4b9b9;
+      padding: 15px 18px; border-radius: var(--radius); margin-bottom: 22px; font-size: 13.5px; line-height: 1.6; display: none; }
     .banner.show { display: block; }
     .banner .bt { color: var(--red); font-weight: 700; display: flex; align-items: center; gap: 8px; }
     .banner code { background: rgba(255,255,255,.09); padding: 2px 6px; border-radius: 5px; }
     .banner a { color: var(--blue); }
     .banner ol { margin: 10px 0 0; padding-left: 20px; }
 
+    /* Consumo por projeto (barras) */
+    .bars { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 4px; }
+    .bar-row { display: grid; grid-template-columns: 190px 1fr 120px; align-items: center; gap: 14px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+    .bar-row:last-child { border-bottom: none; }
+    .bar-name { font-weight: 700; font-size: 13.5px; display: flex; align-items: center; gap: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bar-track { background: var(--panel-2); border-radius: 6px; height: 12px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--cyan), var(--purple)); }
+    .bar-fill.att { background: linear-gradient(90deg, var(--amber), var(--red)); }
+    .bar-val { text-align: right; font-size: 13px; }
+    .bar-val b { font-size: 15px; }
+    .bar-val span { color: var(--muted); font-size: 11px; display: block; }
+    .tag { font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px; text-transform: uppercase; letter-spacing: .04em; }
+    .tag-top { background: rgba(34,211,238,.15); color: var(--cyan); }
+    .tag-att { background: rgba(245,196,81,.15); color: var(--amber); }
+
+    /* Atenção */
+    .att-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+    .att-card { background: var(--panel); border: 1px solid rgba(247,109,109,.3); border-radius: var(--radius); padding: 15px 17px; }
+    .att-card .n { font-weight: 700; font-size: 14px; margin-bottom: 8px; }
+    .att-card ul { margin: 0; padding-left: 18px; color: #f4c9a0; font-size: 12.5px; line-height: 1.7; }
+    .ok-box { background: rgba(46,230,166,.06); border: 1px solid rgba(46,230,166,.28); color: #b9f4de;
+      padding: 14px 18px; border-radius: var(--radius); font-size: 13.5px; }
+
+    /* Tabela deploys */
     .table-wrap { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    thead th {
-      color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .1em;
-      text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border);
-    }
-    tbody td { padding: 14px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; vertical-align: top; }
+    thead th { color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .1em;
+      text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+    tbody td { padding: 13px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; vertical-align: top; }
     tbody tr:hover { background: rgba(255,255,255,.015); }
-    .proj { font-weight: 700; }
-    .proj a { color: var(--text); text-decoration: none; }
+    .proj a { color: var(--text); text-decoration: none; font-weight: 700; }
     .proj a:hover { color: var(--cyan); }
-    .commit { color: var(--muted); font-size: 12px; margin-top: 3px; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .state-pill { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .04em; margin-left: 8px; vertical-align: middle; }
+    .commit { color: var(--muted); font-size: 12px; margin-top: 3px; max-width: 300px; overflow: hidden; text-overflow: ellipsis; }
+    .state-pill { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .04em; margin-left: 8px; }
     .s-ready { background: rgba(46,230,166,.14); color: var(--green); }
     .s-error { background: rgba(247,109,109,.14); color: var(--red); }
     .s-building { background: rgba(245,196,81,.14); color: var(--amber); }
     .s-other { background: rgba(124,124,134,.16); color: var(--muted); }
-    .branch { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: var(--blue); }
+    .branch { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--blue); }
     td a.open { color: var(--blue); text-decoration: none; }
     td a.open:hover { text-decoration: underline; }
     .empty, .skeleton { color: var(--muted); font-size: 13px; padding: 22px 14px; text-align: center; }
-
-    footer { margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; display: flex; align-items: center; gap: 8px; }
+    footer { margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; line-height: 1.7; }
   </style>
 </head>
 <body>
@@ -111,155 +112,153 @@
       <div class="brand">
         <div class="tri">▲</div>
         <div>
-          <h1>Painel de <span class="hl">Deploys</span></h1>
-          <p>Todos os projetos, via API central na Vercel</p>
+          <h1>Painel de <span class="hl">Consumo</span></h1>
+          <p>Consumo e saúde dos seus projetos · via API da Vercel</p>
         </div>
       </div>
       <div class="controls">
+        <div class="segment" id="period">
+          <button data-d="7">7d</button>
+          <button data-d="30" class="active">30d</button>
+          <button data-d="90">90d</button>
+        </div>
         <span class="auto"><span class="dot"></span> auto <b id="countdown">30</b>s</span>
-        <button class="refresh" id="refreshBtn" onclick="load(true)">
+        <button class="refresh" id="refreshBtn" onclick="loadAll(true)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           atualizar
         </button>
       </div>
     </header>
 
-    <div class="grid-kpi">
-      <div class="kpi"><div class="label">Deploys<br>(recentes)</div><div class="num" id="k-total">0</div></div>
-      <div class="kpi"><div class="label">Prontos</div><div class="num n-green" id="k-ready">0</div></div>
-      <div class="kpi"><div class="label">Com erro</div><div class="num n-red" id="k-error">0</div></div>
-      <div class="kpi"><div class="label">Em andamento</div><div class="num n-amber" id="k-building">0</div></div>
-      <div class="kpi pct"><div class="label">Taxa de sucesso</div><div class="num" id="k-rate">0%</div><div class="sub" id="k-rate-sub">0/0</div></div>
-    </div>
-
     <div class="banner" id="banner"></div>
 
+    <div class="grid-kpi">
+      <div class="kpi"><div class="label">Min. de build<br>consumidos</div><div class="num n-cyan" id="k-build">0</div><div class="sub" id="k-build-sub">no período</div></div>
+      <div class="kpi"><div class="label">Deploys<br>no período</div><div class="num" id="k-deploys">0</div></div>
+      <div class="kpi"><div class="label">Projetos<br>ativos</div><div class="num" id="k-projects">0</div></div>
+      <div class="kpi"><div class="label">Deploys<br>com erro</div><div class="num n-red" id="k-errors">0</div></div>
+      <div class="kpi"><div class="label">Taxa de<br>sucesso</div><div class="num n-green" id="k-rate">0%</div></div>
+      <div class="kpi"><div class="label">Precisam de<br>atenção</div><div class="num n-amber" id="k-att">0</div></div>
+    </div>
+
+    <div class="sec-title">🔥 Consumo por projeto <span class="muted" id="c-note">(minutos de build)</span></div>
+    <div class="bars" id="bars"><div class="skeleton">calculando consumo…</div></div>
+
+    <div class="sec-title">⚠️ Precisa de atenção <span class="muted" id="att-count"></span></div>
+    <div id="attention"><div class="skeleton">analisando…</div></div>
+
+    <div class="sec-title">🕐 Deploys recentes</div>
     <div class="table-wrap">
       <table>
-        <thead>
-          <tr><th>Projeto / Commit</th><th>Branch</th><th>Autor</th><th>Duração</th><th>Quando</th><th></th></tr>
-        </thead>
-        <tbody id="rows"><tr><td colspan="6" class="skeleton">carregando deployments…</td></tr></tbody>
+        <thead><tr><th>Projeto / Commit</th><th>Branch</th><th>Autor</th><th>Duração</th><th>Quando</th><th></th></tr></thead>
+        <tbody id="rows"><tr><td colspan="6" class="skeleton">carregando…</td></tr></tbody>
       </table>
     </div>
 
     <footer>
-      <span>〰️</span> <span>Fonte: <span id="src">/api/deployments</span> · atualizado <span id="updated">—</span></span>
+      Fonte: <code style="color:var(--muted)">/api/usage</code> e <code style="color:var(--muted)">/api/deployments</code> · atualizado <span id="updated">—</span><br>
+      ℹ️ A API pessoal da Vercel não expõe banda/edge-requests por projeto — o consumo aqui é medido por <b>minutos de build</b> e atividade de deploy, que são os dados reais disponíveis.
     </footer>
   </div>
 
   <script>
     const REFRESH_SECONDS = 30;
     let countdown = REFRESH_SECONDS;
+    let days = 30;
 
-    function stateClass(s) {
-      s = (s || '').toUpperCase();
-      if (s === 'READY') return 's-ready';
-      if (s === 'ERROR') return 's-error';
-      if (['BUILDING', 'QUEUED', 'INITIALIZING'].includes(s)) return 's-building';
-      return 's-other';
-    }
-    function isBuilding(s) { return ['BUILDING', 'QUEUED', 'INITIALIZING'].includes((s || '').toUpperCase()); }
+    const $ = (id) => document.getElementById(id);
+    function esc(v){ return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function timeAgo(ts){ if(!ts) return '—'; const m=Math.floor((Date.now()-ts)/60000);
+      if(m<1) return 'agora'; if(m<60) return m+' min'; const h=Math.floor(m/60); if(h<24) return h+'h'; return Math.floor(h/24)+'d'; }
+    function fmtDur(sec){ if(sec==null) return '—'; if(sec<60) return sec+'s'; const m=Math.floor(sec/60),s=sec%60; return m+'m'+(s?' '+s+'s':''); }
+    function fmtMin(min){ if(min>=60){ const h=Math.floor(min/60), m=Math.round(min%60); return h+'h'+(m?' '+m+'m':''); } return (Math.round(min*10)/10)+' min'; }
+    function stateClass(s){ s=(s||'').toUpperCase(); if(s==='READY')return 's-ready'; if(s==='ERROR')return 's-error';
+      if(['BUILDING','QUEUED','INITIALIZING'].includes(s))return 's-building'; return 's-other'; }
+    function isBuilding(s){ return ['BUILDING','QUEUED','INITIALIZING'].includes((s||'').toUpperCase()); }
 
-    function timeAgo(ts) {
-      if (!ts) return '—';
-      const m = Math.floor((Date.now() - ts) / 60000);
-      if (m < 1) return 'agora';
-      if (m < 60) return m + ' min';
-      const h = Math.floor(m / 60);
-      if (h < 24) return h + 'h';
-      return Math.floor(h / 24) + 'd';
-    }
-    function fmtDur(sec) {
-      if (sec == null) return '—';
-      if (sec < 60) return sec + 's';
-      const m = Math.floor(sec / 60), s = sec % 60;
-      return m + 'm' + (s ? ' ' + s + 's' : '');
-    }
-    function esc(v) {
-      return String(v == null ? '' : v).replace(/[&<>"']/g, (c) => (
-        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    function showBanner(msg, token){ const b=$('banner'); b.classList.add('show');
+      b.innerHTML = `<div class="bt">⚠️ Não foi possível carregar</div><div style="margin-top:6px">${esc(msg)}</div>` +
+        (token ? `<ol><li>Crie um token em <a href="https://vercel.com/account/tokens" target="_blank" rel="noopener">vercel.com/account/tokens</a></li>
+        <li><b>Settings → Environment Variables</b> → adicione <code>VERCEL_TOKEN</code></li>
+        <li>Marque Production/Preview e faça <b>Redeploy</b></li></ol>` : ''); }
+    function hideBanner(){ $('banner').classList.remove('show'); }
+
+    async function getJSON(url){ const r=await fetch(url,{cache:'no-store'}); const d=await r.json().catch(()=>({}));
+      if(!r.ok){ const e=new Error(d.error||('HTTP '+r.status)); e.code=d.code; throw e; } return d; }
+
+    async function loadUsage(){
+      const u = await getJSON('/api/usage?days=' + days);
+      $('k-build').textContent = u.totals.buildMinutes;
+      $('k-build-sub').textContent = fmtMin(u.totals.buildMinutes) + ' · ' + days + 'd';
+      $('k-deploys').textContent = u.totals.deploys;
+      $('k-projects').textContent = u.totals.projects;
+      $('k-errors').textContent = u.totals.errors;
+      $('k-rate').textContent = u.totals.successRate + '%';
+      $('k-att').textContent = u.totals.attention;
+
+      const bars = $('bars');
+      if(!u.projects.length){ bars.innerHTML = '<div class="empty">nenhum deploy no período</div>'; }
+      else {
+        bars.innerHTML = u.projects.slice(0,12).map(p=>{
+          const tags = (p.topConsumer?'<span class="tag tag-top">maior consumo</span>':'') + (p.attention?'<span class="tag tag-att">atenção</span>':'');
+          return `<div class="bar-row">
+            <div class="bar-name" title="${esc(p.name)}">${esc(p.name)} ${tags}</div>
+            <div class="bar-track"><div class="bar-fill ${p.attention?'att':''}" style="width:${Math.max(p.buildShare,3)}%"></div></div>
+            <div class="bar-val"><b>${fmtMin(p.buildMinutes)}</b><span>${p.deploys} deploys · ${p.errorRate}% erro</span></div>
+          </div>`; }).join('');
+      }
+
+      const att = u.projects.filter(p=>p.attention);
+      $('att-count').textContent = att.length ? '('+att.length+')' : '';
+      $('attention').innerHTML = att.length
+        ? '<div class="att-grid">' + att.map(p=>`<div class="att-card">
+            <div class="n">${esc(p.name)}</div>
+            <ul>${p.reasons.map(r=>'<li>'+esc(r)+'</li>').join('')}
+            <li style="color:var(--muted)">${p.deploys} deploys · ${fmtMin(p.buildMinutes)} de build · último ${timeAgo(p.lastDeploy)}</li></ul>
+          </div>`).join('') + '</div>'
+        : '<div class="ok-box">✅ Tudo saudável — nenhum projeto com taxa de erro alta ou build muito lento no período.</div>';
     }
 
-    function showBanner(msg, needsToken) {
-      const b = document.getElementById('banner');
-      b.classList.add('show');
-      b.innerHTML = `
-        <div class="bt">⚠️ Não foi possível carregar</div>
-        <div style="margin-top:6px">${esc(msg)}</div>` +
-        (needsToken ? `<ol>
-            <li>Crie um token em <a href="https://vercel.com/account/tokens" target="_blank" rel="noopener">vercel.com/account/tokens</a></li>
-            <li>No projeto: <b>Settings → Environment Variables</b> → adicione <code>VERCEL_TOKEN</code></li>
-            <li>Marque Production, Preview e Development e faça <b>Redeploy</b></li>
-          </ol>` : '');
+    async function loadDeployments(){
+      const d = await getJSON('/api/deployments?limit=25');
+      const tb = $('rows');
+      tb.innerHTML = (d.deployments||[]).length ? d.deployments.map(x=>`
+        <tr>
+          <td><div class="proj">${x.url?`<a href="https://${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>`:esc(x.name)}<span class="state-pill ${stateClass(x.state)}">${esc(x.state)}</span></div>
+            <div class="commit" title="${esc(x.commitMessage||'')}">${esc(x.commitMessage||'—')}</div></td>
+          <td><span class="branch">${esc(x.branch||'—')}</span></td>
+          <td>${esc(x.creator||'—')}</td>
+          <td>${fmtDur(x.buildSeconds)}</td>
+          <td>${timeAgo(x.created)}</td>
+          <td>${x.url?`<a class="open" href="https://${esc(x.url)}" target="_blank" rel="noopener">abrir ↗</a>`:''}</td>
+        </tr>`).join('') : '<tr><td colspan="6" class="empty">nenhum deployment encontrado</td></tr>';
     }
-    function hideBanner() { document.getElementById('banner').classList.remove('show'); }
 
-    async function load(manual) {
-      const btn = document.getElementById('refreshBtn');
-      if (manual) { btn.disabled = true; btn.classList.add('spin'); }
+    async function loadAll(manual){
+      const btn=$('refreshBtn'); if(manual){ btn.disabled=true; btn.classList.add('spin'); }
       try {
-        const res = await fetch('/api/deployments?limit=50', { cache: 'no-store' });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          const e = new Error(data.error || ('HTTP ' + res.status));
-          e.code = data.code; throw e;
-        }
-        const deps = data.deployments || [];
-
-        let ready = 0, error = 0, building = 0;
-        for (const d of deps) {
-          const s = (d.state || '').toUpperCase();
-          if (s === 'READY') ready++;
-          else if (s === 'ERROR') error++;
-          else if (isBuilding(s)) building++;
-        }
-        const finished = ready + error;
-        const rate = finished ? Math.round((ready / finished) * 100) : 0;
-
-        document.getElementById('k-total').textContent = deps.length;
-        document.getElementById('k-ready').textContent = ready;
-        document.getElementById('k-error').textContent = error;
-        document.getElementById('k-building').textContent = building;
-        document.getElementById('k-rate').textContent = rate + '%';
-        document.getElementById('k-rate-sub').textContent = ready + '/' + finished;
-
-        const tb = document.getElementById('rows');
-        tb.innerHTML = deps.length ? deps.map((d) => `
-          <tr>
-            <td>
-              <div class="proj">${d.url ? `<a href="https://${esc(d.url)}" target="_blank" rel="noopener">${esc(d.name)}</a>` : esc(d.name)}<span class="state-pill ${stateClass(d.state)}">${esc(d.state)}</span></div>
-              <div class="commit" title="${esc(d.commitMessage || '')}">${esc(d.commitMessage || '—')}</div>
-            </td>
-            <td><span class="branch">${esc(d.branch || '—')}</span></td>
-            <td>${esc(d.creator || '—')}</td>
-            <td>${fmtDur(d.buildSeconds)}</td>
-            <td>${timeAgo(d.created)}</td>
-            <td>${d.url ? `<a class="open" href="https://${esc(d.url)}" target="_blank" rel="noopener">abrir ↗</a>` : ''}</td>
-          </tr>`).join('') : '<tr><td colspan="6" class="empty">nenhum deployment encontrado</td></tr>';
-
+        await Promise.all([loadUsage(), loadDeployments()]);
         hideBanner();
-        document.getElementById('updated').textContent = new Date().toLocaleTimeString('pt-BR');
-      } catch (e) {
-        showBanner(
-          e.code === 'NO_TOKEN'
-            ? e.message
-            : 'Failed to fetch — confira se /api/deployments está no ar e se o token (VERCEL_TOKEN) foi configurado lá.',
-          e.code === 'NO_TOKEN'
-        );
+        $('updated').textContent = new Date().toLocaleTimeString('pt-BR');
+      } catch(e){
+        showBanner(e.code==='NO_TOKEN'? e.message : ('Failed to fetch — confira se /api/usage está no ar e se o token (VERCEL_TOKEN) foi configurado lá.'), e.code==='NO_TOKEN');
       } finally {
-        if (manual) { btn.disabled = false; setTimeout(() => btn.classList.remove('spin'), 500); }
+        if(manual){ btn.disabled=false; setTimeout(()=>btn.classList.remove('spin'),600); }
         countdown = REFRESH_SECONDS;
       }
     }
 
-    function tick() {
-      countdown--;
-      document.getElementById('countdown').textContent = Math.max(countdown, 0);
-      if (countdown <= 0) { countdown = REFRESH_SECONDS; load(false); }
-    }
+    $('period').addEventListener('click', (e)=>{
+      const b = e.target.closest('button'); if(!b) return;
+      days = parseInt(b.dataset.d,10);
+      [...$('period').children].forEach(x=>x.classList.toggle('active', x===b));
+      loadAll(true);
+    });
 
-    load(false);
+    function tick(){ countdown--; $('countdown').textContent=Math.max(countdown,0);
+      if(countdown<=0){ countdown=REFRESH_SECONDS; loadAll(false); } }
+
+    loadAll(false);
     setInterval(tick, 1000);
   </script>
 </body>
