@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Painel de Monitoramento Vercel</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --panel: #111114;
+      --panel-2: #17171b;
+      --border: #26262c;
+      --text: #ededed;
+      --muted: #8a8a94;
+      --accent: #0070f3;
+      --green: #34d399;
+      --amber: #fbbf24;
+      --red: #f87171;
+      --blue: #60a5fa;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+    .wrap { max-width: 1160px; margin: 0 auto; padding: 28px 20px 60px; }
+
+    header.top {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px; margin-bottom: 28px;
+    }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .logo {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: linear-gradient(135deg, #0070f3, #7928ca);
+      display: grid; place-items: center; font-weight: 800; font-size: 20px;
+    }
+    .brand h1 { font-size: 20px; margin: 0; letter-spacing: -0.02em; }
+    .brand p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+
+    .status-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .live {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--panel); border: 1px solid var(--border);
+      padding: 8px 12px; border-radius: 999px; font-size: 13px; color: var(--muted);
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 0 rgba(52,211,153,.5); animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(52,211,153,.5);} 70% { box-shadow: 0 0 0 8px rgba(52,211,153,0);} 100% { box-shadow: 0 0 0 0 rgba(52,211,153,0);} }
+    button.refresh {
+      background: var(--accent); color: #fff; border: none; padding: 9px 16px;
+      border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: opacity .15s;
+    }
+    button.refresh:hover { opacity: .9; }
+    button.refresh:disabled { opacity: .5; cursor: default; }
+
+    .grid-kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 26px; }
+    .kpi {
+      background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 18px 18px 16px;
+    }
+    .kpi .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+    .kpi .value { font-size: 30px; font-weight: 700; margin-top: 8px; letter-spacing: -0.02em; }
+    .kpi .sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
+
+    .section-title { font-size: 15px; font-weight: 600; margin: 26px 0 14px; display: flex; align-items: center; gap: 8px; }
+    .section-title .count { color: var(--muted); font-weight: 400; font-size: 13px; }
+
+    .states { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 7px; font-size: 12px;
+      background: var(--panel-2); border: 1px solid var(--border);
+      padding: 6px 11px; border-radius: 999px;
+    }
+    .chip b { font-weight: 700; }
+
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+    .card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 16px; transition: border-color .15s, transform .15s;
+    }
+    .card:hover { border-color: #3a3a44; }
+    .card .name { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .card .meta { color: var(--muted); font-size: 12px; margin-top: 8px; line-height: 1.6; }
+    .card a { color: var(--blue); text-decoration: none; }
+    .card a:hover { text-decoration: underline; }
+
+    .state-pill { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .03em; }
+    .s-ready { background: rgba(52,211,153,.14); color: var(--green); }
+    .s-error { background: rgba(248,113,113,.14); color: var(--red); }
+    .s-building, .s-queued, .s-initializing { background: rgba(251,191,36,.14); color: var(--amber); }
+    .s-canceled, .s-unknown { background: rgba(138,138,148,.16); color: var(--muted); }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); }
+    th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    th { color: var(--muted); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+    tr:last-child td { border-bottom: none; }
+    td a { color: var(--blue); text-decoration: none; }
+    td a:hover { text-decoration: underline; }
+    .commit { color: var(--muted); max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
+
+    .banner {
+      background: rgba(248,113,113,.08); border: 1px solid rgba(248,113,113,.3);
+      color: #fecaca; padding: 18px 20px; border-radius: var(--radius); margin-bottom: 24px;
+      font-size: 14px; line-height: 1.6;
+    }
+    .banner h3 { margin: 0 0 8px; color: var(--red); font-size: 15px; }
+    .banner code { background: rgba(255,255,255,.08); padding: 2px 6px; border-radius: 5px; font-size: 13px; }
+    .banner ol { margin: 10px 0 0; padding-left: 20px; }
+    .banner a { color: var(--blue); }
+
+    .skeleton { color: var(--muted); font-size: 13px; padding: 24px; text-align: center; }
+    footer { margin-top: 40px; color: var(--muted); font-size: 12px; text-align: center; }
+    .empty { color: var(--muted); font-size: 13px; padding: 20px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand">
+        <div class="logo">▲</div>
+        <div>
+          <h1>Painel de Monitoramento Vercel</h1>
+          <p id="userline">Carregando conta…</p>
+        </div>
+      </div>
+      <div class="status-bar">
+        <span class="live"><span class="dot"></span> Ao vivo · atualiza em <b id="countdown">30</b>s</span>
+        <button class="refresh" id="refreshBtn" onclick="loadAll(true)">Atualizar agora</button>
+      </div>
+    </header>
+
+    <div id="errorBox"></div>
+
+    <div class="grid-kpi" id="kpis">
+      <div class="kpi"><div class="label">Projetos</div><div class="value" id="k-projects">—</div><div class="sub">total na conta</div></div>
+      <div class="kpi"><div class="label">Deployments (24h)</div><div class="value" id="k-24h">—</div><div class="sub">últimas 24 horas</div></div>
+      <div class="kpi"><div class="label">Deployments (7d)</div><div class="value" id="k-7d">—</div><div class="sub">últimos 7 dias</div></div>
+      <div class="kpi"><div class="label">Build médio</div><div class="value" id="k-build">—</div><div class="sub">tempo de compilação</div></div>
+    </div>
+
+    <div class="section-title">Estados dos deployments <span class="count" id="states-count"></span></div>
+    <div class="states" id="states"><span class="skeleton">carregando…</span></div>
+
+    <div class="section-title">Projetos <span class="count" id="proj-count"></span></div>
+    <div class="cards" id="projects"><div class="skeleton">carregando projetos…</div></div>
+
+    <div class="section-title">Deployments recentes <span class="count" id="dep-count"></span></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Projeto</th><th>Estado</th><th>Ambiente</th><th>Branch</th><th>Commit</th><th>Build</th><th>Quando</th><th></th></tr>
+        </thead>
+        <tbody id="deployments"><tr><td colspan="8" class="skeleton">carregando deployments…</td></tr></tbody>
+      </table>
+    </div>
+
+    <footer>
+      Atualizado em <span id="updated">—</span> · dados via API oficial da Vercel · o token fica seguro no servidor
+    </footer>
+  </div>
+
+  <script>
+    const REFRESH_SECONDS = 30;
+    let countdown = REFRESH_SECONDS;
+    let timer = null;
+
+    function stateClass(state) {
+      const s = (state || 'UNKNOWN').toUpperCase();
+      if (s === 'READY') return 's-ready';
+      if (s === 'ERROR') return 's-error';
+      if (['BUILDING', 'QUEUED', 'INITIALIZING'].includes(s)) return 's-building';
+      if (s === 'CANCELED') return 's-canceled';
+      return 's-unknown';
+    }
+
+    function timeAgo(ts) {
+      if (!ts) return '—';
+      const diff = Date.now() - ts;
+      const m = Math.floor(diff / 60000);
+      if (m < 1) return 'agora';
+      if (m < 60) return m + ' min atrás';
+      const h = Math.floor(m / 60);
+      if (h < 24) return h + 'h atrás';
+      const d = Math.floor(h / 24);
+      return d + 'd atrás';
+    }
+
+    function fmtBuild(sec) {
+      if (sec == null) return '—';
+      if (sec < 60) return sec + 's';
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return m + 'm' + (s ? ' ' + s + 's' : '');
+    }
+
+    function esc(str) {
+      return String(str == null ? '' : str).replace(/[&<>"']/g, (c) => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+      ));
+    }
+
+    function showConfigError(msg) {
+      document.getElementById('errorBox').innerHTML = `
+        <div class="banner">
+          <h3>⚙️ Falta configurar o token</h3>
+          <div>${esc(msg)}</div>
+          <ol>
+            <li>Crie um token em <a href="https://vercel.com/account/tokens" target="_blank" rel="noopener">vercel.com/account/tokens</a></li>
+            <li>No projeto na Vercel: <b>Settings → Environment Variables</b></li>
+            <li>Adicione <code>VERCEL_TOKEN</code> com o valor do token (ambientes Production, Preview e Development)</li>
+            <li>Faça um <b>Redeploy</b> para aplicar</li>
+          </ol>
+        </div>`;
+    }
+
+    async function getJSON(url) {
+      const res = await fetch(url, { cache: 'no-store' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const err = new Error(data.error || ('HTTP ' + res.status));
+        err.code = data.code;
+        throw err;
+      }
+      return data;
+    }
+
+    async function loadSummary() {
+      const s = await getJSON('/api/summary');
+      if (s.user) {
+        document.getElementById('userline').textContent =
+          '@' + (s.user.username || '') + (s.user.email ? ' · ' + s.user.email : '');
+      } else {
+        document.getElementById('userline').textContent = 'Conta Vercel conectada';
+      }
+      document.getElementById('k-projects').textContent = s.totals.projects;
+      document.getElementById('k-24h').textContent = s.totals.deploymentsLast24h;
+      document.getElementById('k-7d').textContent = s.totals.deploymentsLast7d;
+      document.getElementById('k-build').textContent = fmtBuild(s.totals.avgBuildSeconds);
+
+      const entries = Object.entries(s.deploymentStates || {});
+      document.getElementById('states-count').textContent = entries.length ? '' : '(sem dados)';
+      document.getElementById('states').innerHTML = entries.length
+        ? entries.map(([st, n]) => `<span class="chip"><span class="state-pill ${stateClass(st)}">${esc(st)}</span> <b>${n}</b></span>`).join('')
+        : '<span class="empty">nenhum deployment encontrado</span>';
+    }
+
+    async function loadProjects() {
+      const d = await getJSON('/api/projects');
+      document.getElementById('proj-count').textContent = '(' + d.count + ')';
+      const el = document.getElementById('projects');
+      if (!d.projects.length) { el.innerHTML = '<div class="empty">nenhum projeto encontrado</div>'; return; }
+      el.innerHTML = d.projects.map((p) => {
+        const ld = p.latestDeployment;
+        const pill = `<span class="state-pill ${stateClass(ld && ld.state)}">${esc(ld ? ld.state : 'SEM DEPLOY')}</span>`;
+        const link = ld && ld.url ? `<a href="https://${esc(ld.url)}" target="_blank" rel="noopener">${esc(ld.url)}</a>` : '<span style="color:var(--muted)">—</span>';
+        return `<div class="card">
+          <div class="name" title="${esc(p.name)}">${esc(p.name)}</div>
+          <div class="meta">
+            ${pill}<br>
+            ${p.framework ? '🧩 ' + esc(p.framework) + '<br>' : ''}
+            🔗 ${link}<br>
+            🕐 ${ld ? timeAgo(ld.createdAt) : 'nunca'}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    async function loadDeployments() {
+      const d = await getJSON('/api/deployments?limit=30');
+      document.getElementById('dep-count').textContent = '(' + d.count + ')';
+      const el = document.getElementById('deployments');
+      if (!d.deployments.length) { el.innerHTML = '<tr><td colspan="8" class="empty">nenhum deployment encontrado</td></tr>'; return; }
+      el.innerHTML = d.deployments.map((x) => `
+        <tr>
+          <td><b>${esc(x.name)}</b></td>
+          <td><span class="state-pill ${stateClass(x.state)}">${esc(x.state)}</span></td>
+          <td>${esc(x.target || 'preview')}</td>
+          <td>${esc(x.branch || '—')}</td>
+          <td class="commit" title="${esc(x.commitMessage || '')}">${esc(x.commitMessage || '—')}</td>
+          <td>${fmtBuild(x.buildSeconds)}</td>
+          <td>${timeAgo(x.created)}</td>
+          <td>${x.url ? `<a href="https://${esc(x.url)}" target="_blank" rel="noopener">abrir ↗</a>` : ''}</td>
+        </tr>`).join('');
+    }
+
+    async function loadAll(manual) {
+      const btn = document.getElementById('refreshBtn');
+      if (manual) { btn.disabled = true; btn.textContent = 'Atualizando…'; }
+      try {
+        await loadSummary();
+        await Promise.all([loadProjects(), loadDeployments()]);
+        document.getElementById('errorBox').innerHTML = '';
+        document.getElementById('updated').textContent = new Date().toLocaleString('pt-BR');
+      } catch (e) {
+        if (e.code === 'NO_TOKEN') showConfigError(e.message);
+        else document.getElementById('errorBox').innerHTML =
+          `<div class="banner"><h3>Erro ao carregar dados</h3><div>${esc(e.message)}</div></div>`;
+      } finally {
+        if (manual) { btn.disabled = false; btn.textContent = 'Atualizar agora'; }
+        countdown = REFRESH_SECONDS;
+      }
+    }
+
+    function tick() {
+      countdown--;
+      document.getElementById('countdown').textContent = Math.max(countdown, 0);
+      if (countdown <= 0) { countdown = REFRESH_SECONDS; loadAll(false); }
+    }
+
+    loadAll(false);
+    timer = setInterval(tick, 1000);
+  </script>
+</body>
+</html>

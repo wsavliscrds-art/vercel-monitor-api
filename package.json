@@ -1,0 +1,10 @@
+{
+  "name": "vercel-monitor-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Painel de monitoramento em tempo real dos seus projetos e deployments na Vercel",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}
