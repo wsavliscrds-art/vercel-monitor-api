@@ -273,7 +273,12 @@
 
     svg { display: block; width: 100%; height: auto; overflow: visible; }
     .ax { fill: var(--faint); font-size: 9.5px; font-variant-numeric: tabular-nums; }
+    .ax-r { fill: var(--blue); opacity: .8; }
     .gl { stroke: var(--grid); stroke-width: 1; } .dash { stroke-dasharray: 3 3; }
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+    @keyframes fadeIn { to { opacity: 1; } }
+    .draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 1.05s var(--ease) forwards; }
+    @media (prefers-reduced-motion: reduce) { .draw { animation: none; stroke-dashoffset: 0; } }
 
     .mini { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
     .mini .m { background: var(--panel-2); border: 1px solid var(--hairline); border-radius: var(--radius-sm); padding: 11px 12px; }
@@ -452,7 +457,7 @@
         <div class="grid" style="margin-bottom:16px">
           <div class="card col-5 reveal" id="performance">
             <div class="ch-head"><h3>Performance Global</h3>
-              <span class="legend"><span><i style="background:var(--good)"></i>deploys/dia</span><span><i style="background:var(--bad)"></i>erros/dia</span><span><i style="background:var(--blue)"></i>build médio</span></span></div>
+              <span class="legend"><span><i style="background:var(--good)"></i>deploys/dia</span><span><i style="background:var(--bad)"></i>erros/dia</span><span><i style="background:var(--blue)"></i>build médio (s · dir.)</span></span></div>
             <div class="mini">
               <div class="m"><div class="l">Taxa Sucesso</div><div class="v" id="m-rate">—</div></div>
               <div class="m"><div class="l">Deploys/dia</div><div class="v" id="m-freq">—</div></div>
@@ -578,23 +583,73 @@
     // ---- Performance: linhas deploys/erros + build médio (normalizado numa escala) ----
     function renderPerf(container, daily){
       container.innerHTML=''; if(!daily.length){ container.innerHTML='<div class="empty">sem dados</div>'; return; }
-      const W=540,H=190,mL=28,mR=28,mT=10,mB=20, pw=W-mL-mR, ph=H-mT-mB, n=daily.length;
-      const maxC=Math.max(1,...daily.map(d=>d.total));
-      const maxB=Math.max(1,...daily.map(d=>d.avgBuildSeconds));
+      const W=560,H=214,mL=34,mR=44,mT=18,mB=26, pw=W-mL-mR, ph=H-mT-mB, n=daily.length;
+      const maxC=Math.max(1,...daily.map(d=>Math.max(d.total,d.error)));   // eixo esquerdo: contagem
+      const maxB=Math.max(1,...daily.map(d=>d.avgBuildSeconds));            // eixo direito: segundos
       const X=i=> mL+(n<=1?pw/2:i*(pw/(n-1)));
       const Yc=v=> mT+ph-(v/maxC)*ph, Yb=v=> mT+ph-(v/maxB)*ph;
+      const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
       const svg=el('svg',{viewBox:`0 0 ${W} ${H}`});
-      for(let i=0;i<=4;i++){ const y=mT+ph-(ph*i/4); svg.appendChild(el('line',{class:'gl',x1:mL,y1:y,x2:W-mR,y2:y}));
-        const tv=Math.round(maxC*i/4); const tx=el('text',{class:'ax',x:mL-5,y:y+3,'text-anchor':'end'}); tx.textContent=tv; svg.appendChild(tx); }
-      const path=(key,Y,color,w)=>{ let d=''; daily.forEach((dd,i)=>{ d+=(d?'L':'M')+X(i)+' '+Y(dd[key])+' '; }); svg.appendChild(el('path',{d,fill:'none',stroke:color,'stroke-width':w,'stroke-linejoin':'round','stroke-linecap':'round'})); };
-      // build médio (linha azul, escala própria — reta, sem eixo numérico p/ não poluir)
-      path('avgBuildSeconds', Yb, 'var(--blue)', 1.6);
-      path('total', Yc, 'var(--good)', 2);
-      path('error', Yc, 'var(--bad)', 2);
+
+      // gradiente da área principal (deploys)
+      const defs=el('defs',{}); const grad=el('linearGradient',{id:'gDeploys',x1:0,y1:0,x2:0,y2:1});
+      grad.appendChild(el('stop',{offset:'0%','stop-color':'var(--good)','stop-opacity':'0.22'}));
+      grad.appendChild(el('stop',{offset:'100%','stop-color':'var(--good)','stop-opacity':'0'}));
+      defs.appendChild(grad); svg.appendChild(defs);
+
+      // gridlines + eixo esquerdo (contagem) + eixo direito (segundos, em azul p/ mapear a linha de build)
+      for(let i=0;i<=4;i++){ const y=mT+ph-(ph*i/4);
+        svg.appendChild(el('line',{class:'gl',x1:mL,y1:y,x2:W-mR,y2:y}));
+        const lc=el('text',{class:'ax',x:mL-6,y:y+3,'text-anchor':'end'}); lc.textContent=Math.round(maxC*i/4); svg.appendChild(lc);
+        const rb=el('text',{class:'ax ax-r',x:W-mR+6,y:y+3,'text-anchor':'start'}); rb.textContent=Math.round(maxB*i/4)+'s'; svg.appendChild(rb);
+      }
+
+      const linePath=(key,Y)=>{ let d=''; daily.forEach((dd,i)=>{ d+=(d?'L':'M')+X(i).toFixed(1)+' '+Y(dd[key]).toFixed(1)+' '; }); return d; };
+      const addLine=(dd,color,w,extra)=>{ const p=el('path',Object.assign({d:dd,fill:'none',stroke:color,'stroke-width':w,'stroke-linejoin':'round','stroke-linecap':'round',pathLength:'1'},extra||{})); if(!reduce)p.setAttribute('class','draw'); svg.appendChild(p); };
+
+      // área sob deploys
+      const areaD='M'+X(0).toFixed(1)+' '+Yc(daily[0].total).toFixed(1)+' '+
+        daily.map((dd,i)=>'L'+X(i).toFixed(1)+' '+Yc(dd.total).toFixed(1)).join(' ')+
+        ' L'+X(n-1).toFixed(1)+' '+(mT+ph)+' L'+X(0).toFixed(1)+' '+(mT+ph)+' Z';
+      const area=el('path',{d:areaD,fill:'url(#gDeploys)',stroke:'none'});
+      if(!reduce) area.setAttribute('style','opacity:0;animation:fadeIn .9s var(--ease) .25s forwards');
+      svg.appendChild(area);
+
+      // linhas: build (dir., discreta), erros, deploys (principal)
+      addLine(linePath('avgBuildSeconds',Yb), 'var(--blue)', 1.6, {opacity:'0.9'});
+      addLine(linePath('error',Yc), 'var(--bad)', 1.8);
+      addLine(linePath('total',Yc), 'var(--good)', 2.4);
+
+      // pontos + rótulo de valor no último ponto
+      const li=n-1;
+      const endDot=(x,y,color)=>svg.appendChild(el('circle',{cx:x,cy:y,r:3.4,fill:color,stroke:'var(--panel)','stroke-width':2}));
+      endDot(X(li),Yb(daily[li].avgBuildSeconds),'var(--blue)');
+      endDot(X(li),Yc(daily[li].error),'var(--bad)');
+      endDot(X(li),Yc(daily[li].total),'var(--good)');
+      const lblT=el('text',{x:X(li)-6,y:Yc(daily[li].total)-9,'text-anchor':'end','font-size':'11.5','font-weight':'700',fill:'var(--good)'}); lblT.textContent=daily[li].total; svg.appendChild(lblT);
+
+      // crosshair + focos (ocultos até hover/toque)
+      const guide=el('line',{x1:0,y1:mT,x2:0,y2:mT+ph,stroke:'var(--faint)','stroke-width':1,'stroke-dasharray':'3 3',opacity:0}); svg.appendChild(guide);
+      const fD=el('circle',{r:4,fill:'var(--good)',stroke:'var(--panel)','stroke-width':2,opacity:0});
+      const fE=el('circle',{r:4,fill:'var(--bad)',stroke:'var(--panel)','stroke-width':2,opacity:0});
+      const fB=el('circle',{r:4,fill:'var(--blue)',stroke:'var(--panel)','stroke-width':2,opacity:0});
+      [fD,fE,fB].forEach(c=>svg.appendChild(c));
+      const focus=(i)=>{ const x=X(i); guide.setAttribute('x1',x); guide.setAttribute('x2',x); guide.setAttribute('opacity',1);
+        fD.setAttribute('cx',x); fD.setAttribute('cy',Yc(daily[i].total)); fD.setAttribute('opacity',1);
+        fE.setAttribute('cx',x); fE.setAttribute('cy',Yc(daily[i].error)); fE.setAttribute('opacity',1);
+        fB.setAttribute('cx',x); fB.setAttribute('cy',Yb(daily[i].avgBuildSeconds)); fB.setAttribute('opacity',1); };
+      const blur=()=>{ [guide,fD,fE,fB].forEach(c=>c.setAttribute('opacity',0)); hideTip(); };
+
       const step=Math.ceil(n/7);
-      daily.forEach((dd,i)=>{ const hit=el('rect',{x:X(i)-(pw/n)/2,y:mT,width:pw/n,height:ph,fill:'transparent'});
-        bindTip(hit, `<b>${esc(dd.label)}</b><br><span style="color:var(--good)">${dd.total} deploys</span> · <span style="color:var(--bad)">${dd.error} erros</span><br><span class="mut">build médio ${dd.avgBuildSeconds}s</span>`); svg.appendChild(hit);
-        if(i%step===0){ const tx=el('text',{class:'ax',x:X(i),y:H-6,'text-anchor':'middle'}); tx.textContent=dd.label; svg.appendChild(tx);} });
+      daily.forEach((dd,i)=>{
+        const hit=el('rect',{x:X(i)-(pw/n)/2,y:mT,width:pw/n,height:ph,fill:'transparent'});
+        const html=`<b>${esc(dd.label)}</b><br><span style="color:var(--good)">${dd.total} deploys</span> · <span style="color:var(--bad)">${dd.error} erros</span><br><span class="mut">build médio ${dd.avgBuildSeconds}s</span>`;
+        hit.addEventListener('mouseenter',()=>{ focus(i); showTip(html,hit); });
+        hit.addEventListener('mouseleave',blur);
+        hit.addEventListener('touchstart',()=>{ focus(i); showTip(html,hit); clearTimeout(_tipHideTimer); _tipHideTimer=setTimeout(blur,2600); },{passive:true});
+        svg.appendChild(hit);
+        if(i%step===0){ const tx=el('text',{class:'ax',x:X(i),y:H-8,'text-anchor':'middle'}); tx.textContent=dd.label; svg.appendChild(tx); }
+      });
       container.appendChild(svg);
     }
 
@@ -622,9 +677,11 @@
     function sparkline(values,color){
       const W=92,H=26,n=values.length; if(!n) return '';
       const max=Math.max(1,...values),min=Math.min(...values);
-      const rng=max-min||1; const X=i=>n<=1?W/2:i*(W/(n-1)); const Y=v=>H-2-((v-min)/rng)*(H-4);
+      const rng=max-min||1; const X=i=>n<=1?W/2:i*(W/(n-1)); const Y=v=>H-3-((v-min)/rng)*(H-7);
       let d=''; values.forEach((v,i)=>{ d+=(d?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' '; });
-      return `<svg class="spark" viewBox="0 0 ${W} ${H}"><path d="${d}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+      const area=d+`L${X(n-1).toFixed(1)} ${H} L${X(0).toFixed(1)} ${H} Z`;
+      const lx=X(n-1).toFixed(1), ly=Y(values[n-1]).toFixed(1);
+      return `<svg class="spark" viewBox="0 0 ${W} ${H}"><path d="${area}" fill="${color}" opacity="0.12" stroke="none"/><path d="${d}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${lx}" cy="${ly}" r="1.9" fill="${color}"/></svg>`;
     }
 
     function renderProjects(){
