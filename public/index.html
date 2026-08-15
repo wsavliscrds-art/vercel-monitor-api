@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="color-scheme" content="light dark" />
   <title>Vercel Ops · Control Plane</title>
+  <script>/* aplica o tema salvo antes do primeiro paint — evita flash (FOUC) */try{var _t=localStorage.getItem('theme');if(_t)document.documentElement.setAttribute('data-theme',_t);}catch(e){}</script>
   <style>
     /* ============================================================
        Apple-flavored design system — theme-aware tokens.
@@ -364,6 +365,20 @@
     }
     #tip.show { opacity: 1; transform: none; } #tip .mut { color: var(--muted); }
 
+    /* ---------- Foco de teclado — anel estilo Apple, só para quem navega por teclado ---------- */
+    :focus { outline: none; }
+    .nav-i:focus-visible, .segment button:focus-visible, .iconbtn:focus-visible,
+    .pname a:focus-visible, .banner a:focus-visible, footer a:focus-visible {
+      outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 45%, transparent);
+    }
+    .search:focus-within { outline: none; }
+
+    /* ---------- Transição suave ao alternar tema (dark <-> light) ---------- */
+    .theming, .theming * {
+      transition: background-color .45s var(--ease), color .45s var(--ease), border-color .45s var(--ease),
+                  box-shadow .45s var(--ease), fill .45s var(--ease), stroke .45s var(--ease) !important;
+    }
+
     /* ---------- Accessibility: motion / transparency / contrast ---------- */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
@@ -514,6 +529,7 @@
   <script>
     const REFRESH_SECONDS = 30; let countdown = REFRESH_SECONDS; let days = 30;
     let ALL_PROJECTS = []; let PROJ_FILTER = 'all'; let SEARCH = '';
+    let _perfSig = '', _donutSig = ''; // assinaturas p/ evitar redesenhar SVG sem mudança (sem flash)
     const $ = (id) => document.getElementById(id);
     const NS = 'http://www.w3.org/2000/svg';
     function esc(v){ return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -529,8 +545,11 @@
     const MOON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
     function currentDark(){ const t=document.documentElement.getAttribute('data-theme'); if(t)return t==='dark'; return matchMedia('(prefers-color-scheme: dark)').matches; }
     function applyThemeIcon(){ $('themeBtn').innerHTML = currentDark()?SUN:MOON; }
-    function toggleTheme(){ const next = currentDark()?'light':'dark'; document.documentElement.setAttribute('data-theme', next); try{ localStorage.setItem('theme', next); }catch(e){} applyThemeIcon(); }
-    (function initTheme(){ try{ const s=localStorage.getItem('theme'); if(s)document.documentElement.setAttribute('data-theme', s); }catch(e){} })();
+    let _themeTimer;
+    function toggleTheme(){ const root=document.documentElement; const next = currentDark()?'light':'dark';
+      if(!matchMedia('(prefers-reduced-motion: reduce)').matches){ root.classList.add('theming'); clearTimeout(_themeTimer); _themeTimer=setTimeout(()=>root.classList.remove('theming'),520); }
+      root.setAttribute('data-theme', next); try{ localStorage.setItem('theme', next); }catch(e){} applyThemeIcon(); }
+    /* o tema salvo já foi aplicado pelo script inline no <head> (sem flash) */
 
     /* ---------- Segmented control sliding thumb ---------- */
     function moveThumb(seg){ if(!seg) return; const thumb=seg.querySelector('.seg-thumb'); const active=seg.querySelector('button.active'); if(!thumb||!active) return;
@@ -544,6 +563,14 @@
     function showTip(html,elm){ tip.innerHTML=html; tip.classList.add('show'); const r=elm.getBoundingClientRect(),t=tip.getBoundingClientRect();
       let x=r.left+r.width/2-t.width/2,y=r.top-t.height-8; x=Math.max(8,Math.min(x,innerWidth-t.width-8)); if(y<8)y=r.bottom+8; tip.style.left=x+'px'; tip.style.top=y+'px'; }
     function hideTip(){ tip.classList.remove('show'); }
+    /* Tooltips funcionam no mouse (hover) e no toque (tap com auto-ocultar) */
+    let _tipHideTimer;
+    function bindTip(elm, html){
+      elm.addEventListener('mouseenter',()=>showTip(html,elm));
+      elm.addEventListener('mouseleave',hideTip);
+      elm.addEventListener('touchstart',()=>{ showTip(html,elm); clearTimeout(_tipHideTimer); _tipHideTimer=setTimeout(hideTip,2600); },{passive:true});
+    }
+    addEventListener('scroll',hideTip,{passive:true});
 
     /* Apple system-color palette for categorical series */
     const DCOLORS=['#0a84ff','#30d158','#bf5af2','#ff9f0a','#64d2ff','#ff453a','#8e8e93'];
@@ -566,8 +593,7 @@
       path('error', Yc, 'var(--bad)', 2);
       const step=Math.ceil(n/7);
       daily.forEach((dd,i)=>{ const hit=el('rect',{x:X(i)-(pw/n)/2,y:mT,width:pw/n,height:ph,fill:'transparent'});
-        hit.addEventListener('mouseenter',()=>showTip(`<b>${esc(dd.label)}</b><br><span style="color:var(--good)">${dd.total} deploys</span> · <span style="color:var(--bad)">${dd.error} erros</span><br><span class="mut">build médio ${dd.avgBuildSeconds}s</span>`,hit));
-        hit.addEventListener('mouseleave',hideTip); svg.appendChild(hit);
+        bindTip(hit, `<b>${esc(dd.label)}</b><br><span style="color:var(--good)">${dd.total} deploys</span> · <span style="color:var(--bad)">${dd.error} erros</span><br><span class="mut">build médio ${dd.avgBuildSeconds}s</span>`); svg.appendChild(hit);
         if(i%step===0){ const tx=el('text',{class:'ax',x:X(i),y:H-6,'text-anchor':'middle'}); tx.textContent=dd.label; svg.appendChild(tx);} });
       container.appendChild(svg);
     }
@@ -586,8 +612,7 @@
       top.forEach((x,i)=>{ const frac=x.val/total; const len=Math.max(frac*C-gap,0);
         const c=el('circle',{cx,cy,r:R,fill:'none',stroke:DCOLORS[i%DCOLORS.length],'stroke-width':sw,
           'stroke-dasharray':`${len} ${C-len}`,'stroke-dashoffset':-off,transform:`rotate(-90 ${cx} ${cy})`,'stroke-linecap':'butt'});
-        c.addEventListener('mouseenter',()=>showTip(`<b>${esc(x.name)}</b><br>${fmtMin(x.val)} · ${Math.round(frac*100)}%`,c));
-        c.addEventListener('mouseleave',hideTip); svg.appendChild(c); off+=frac*C; });
+        bindTip(c, `<b>${esc(x.name)}</b><br>${fmtMin(x.val)} · ${Math.round(frac*100)}%`); svg.appendChild(c); off+=frac*C; });
       const t1=el('text',{x:cx,y:cy-2,'text-anchor':'middle',fill:'var(--text)','font-size':'23','font-weight':'700','letter-spacing':'-0.02em'}); t1.textContent=Math.round(totalMin); svg.appendChild(t1);
       const t2=el('text',{x:cx,y:cy+15,'text-anchor':'middle',fill:'var(--muted)','font-size':'9'}); t2.textContent='min build'; svg.appendChild(t2);
       container.appendChild(svg);
@@ -666,10 +691,12 @@
         // Performance
         $('m-rate').textContent=u.totals.successRate+'%'; $('m-freq').textContent=u.dora.deploysPerDay;
         $('m-p95').textContent=u.build.p95+'s'; $('m-cfr').textContent=u.dora.changeFailureRate+'%';
-        renderPerf($('chart-perf'), u.daily);
+        const perfSig=JSON.stringify(u.daily);
+        if(perfSig!==_perfSig){ _perfSig=perfSig; renderPerf($('chart-perf'), u.daily); }
 
         // Donut
-        renderDonut($('donut'), $('donut-legend'), u.projects, u.totals.buildMinutes);
+        const donutSig=JSON.stringify(u.projects)+'|'+u.totals.buildMinutes;
+        if(donutSig!==_donutSig){ _donutSig=donutSig; renderDonut($('donut'), $('donut-legend'), u.projects, u.totals.buildMinutes); }
 
         // Alertas derivados
         const alerts=[];
